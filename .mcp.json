@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "gmail": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "REPLACE_WITH_ABSOLUTE_PATH/advanced-gmail-mcp/src/server.ts"
+      ]
+    }
+  }
+}
