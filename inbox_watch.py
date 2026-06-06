@@ -47,10 +47,11 @@ def save_seen(seen):
 
 
 def run_claude(prompt):
-    # ★ あなたが入れた Gmail MCP のツール名に合わせて調整（README 参照）
+    # ★ 読み取り系ツールだけを許可（送信・下書き・削除系は入れない）。
+    # 既定値は advanced-gmail-mcp の読み取り系ツール名。別の MCP を使う場合は .env で上書き。
     allowed = os.environ.get(
         "GMAIL_ALLOWED_TOOLS",
-        "mcp__gmail__list_accounts,mcp__gmail__search,mcp__gmail__read,mcp__gmail__thread",
+        "mcp__gmail__list_emails,mcp__gmail__search_emails,mcp__gmail__read_email,mcp__gmail__get_thread,mcp__gmail__get_labels",
     )
     cmd = ["claude", "-p", prompt, "--output-format", "json", "--allowedTools", allowed]
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=str(BASE))
