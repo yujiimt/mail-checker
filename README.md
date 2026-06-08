@@ -44,24 +44,32 @@ list/search/read/thread 相当だけ許可しておけば、ヘッドレスで�
 Slack で通知先チャンネル用の Incoming Webhook URL を発行し、`SLACK_WEBHOOK_URL` に入れる。
 （`.env.example` を `.env` にコピーして両方の値を記入）
 
-### 4. 重要送信者を編集
-`prompts/triage.txt` の「重要送信者」リストを自分の取引先に合わせて編集。
+### 4. 除外リストを編集
+`prompts/triage.txt` の「除外リスト」に、通知したくない送信者・ドメイン・件名キーワード
+（ニュースレター / プロモ / 自動通知など）を追記する。重要送信者リストは使わない
+（受信メールを判定軸で機械的にトリアージし、除外リストに該当するものだけ落とす方式）。
 
 ---
 
 ## 動作確認 → 自動化
 
 ```bash
-# まず1回手動実行（Gmail のツール承認が出たら許可）
+# まず1回手動実行（Gmail のツール承認が出たら読み取り系だけ許可）
 python3 inbox_watch.py
-
-# 問題なければ cron に登録（crontab.example を参照）
-crontab -e
 ```
 
+自動化（平日 9:00〜20:00 を 2時間ごと / 新規の要対応メールが無ければ通知しない）:
+
+- **macOS / Linux**: `crontab.example` を参照して `crontab -e` に登録
+- **Windows**: 同梱の `register-task.ps1` を実行してタスク スケジューラに登録
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File .\register-task.ps1
+  ```
+  解除は `Unregister-ScheduledTask -TaskName "inbox-watcher" -Confirm:$false`
+
 ## 注意
-- `--allowedTools` に読み取り系しか入れない限り、送信・既読化・削除は起きない。
+- このツールは **受信メールの確認のみ**。`GMAIL_ALLOWED_TOOLS` に読み取り系しか入れない限り、
+  送信・下書き・既読化・削除は起きない。
+- 新規（前回未通知）の要対応メールが無ければ Slack には通知されない（`state/seen.json` で dedup）。
 - 2026/6/15 以降、サブスクプランの `claude -p`（Agent SDK）使用量は対話用とは別枠の月次クレジットを消費する。
   平日 数回/日 なら軽いが、頻度を上げるときはこの枠を意識する。
-- 「下書きまで作る」まで踏み込みたくなったら、送信ツールは `--allowedTools` に**入れない**まま、
-  下書き作成ツールだけ足す。送信は人間が Gmail 上で最終確認するのが安全。

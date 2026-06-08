@@ -14,6 +14,7 @@ import json
 import os
 import sys
 import pathlib
+import shutil
 import subprocess
 import urllib.request
 
@@ -47,13 +48,32 @@ def save_seen(seen):
 
 
 def run_claude(prompt):
-    # ★ あなたが入れた Gmail MCP のツール名に合わせて調整（README 参照）
+    # ★ 読み取り系ツールだけを許可（送信・下書き・削除系は入れない）。
+    # 既定値は advanced-gmail-mcp の読み取り系ツール名。別の MCP を使う場合は .env で上書き。
     allowed = os.environ.get(
         "GMAIL_ALLOWED_TOOLS",
-        "mcp__gmail__list_accounts,mcp__gmail__search,mcp__gmail__read,mcp__gmail__thread",
+        "mcp__gmail__list_emails,mcp__gmail__search_emails,mcp__gmail__read_email,mcp__gmail__get_thread,mcp__gmail__get_labels",
     )
-    cmd = ["claude", "-p", prompt, "--output-format", "json", "--allowedTools", allowed]
-    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=str(BASE))
+    # claude 実行ファイルを解決。Windows では npm 製の claude が claude.cmd のため、
+    # フルパス解決 + シェル経由で起動しないと FileNotFoundError(WinError 2) になる。
+    claude_exe = shutil.which("claude")
+    if not claude_exe:
+        sys.stderr.write(
+            "claude コマンドが見つかりません。Claude Code CLI をインストールし、PATH を通してください。\n"
+            "（タスクスケジューラ実行時は PATH が薄いことがあるので、その場合は claude のフルパス指定が必要）\n"
+        )
+        sys.exit(127)
+    cmd = [claude_exe, "-p", "--output-format", "json", "--allowedTools", allowed]
+    # プロンプトは引数ではなく stdin で渡す（長文・改行・引用符のクォート崩れを回避）。
+    proc = subprocess.run(
+        cmd,
+        input=prompt,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        cwd=str(BASE),
+        shell=(os.name == "nt"),
+    )
     if proc.returncode != 0:
         sys.stderr.write("claude failed:\n" + proc.stderr + "\n")
         sys.exit(proc.returncode)

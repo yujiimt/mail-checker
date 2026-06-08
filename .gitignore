@@ -1,0 +1,24 @@
+# 機密情報（絶対にコミットしない）
+.env
+credentials.json
+client_secret*.json
+tokens/
+*.token.json
+
+# Gmail MCP / OAuth 関連の鍵が紛れ込むのを防ぐ
+**/credentials.json
+**/tokens/
+
+# 実行時に生成される状態・ログ
+state/seen.json
+logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / エディタ
+.DS_Store
+.vscode/

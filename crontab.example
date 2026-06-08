@@ -1,11 +1,10 @@
-# inbox-watcher: 1日数回トリアージして Slack 通知
-# 平日 9:00 / 12:30 / 15:30 / 18:00 に実行（JST。サーバのTZがUTCなら時刻を-9して調整）
+# inbox-watcher: 平日 9:00〜19:00 を 2時間ごとにトリアージして Slack 通知
+# （9, 11, 13, 15, 17, 19 時に実行 / JST 想定。サーバのTZがUTCなら時刻を-9して調整）
 # crontab -e で貼り付け、/path/to は実際のパスに置換。
 # PYTHON は `which python3` の結果（cron は PATH が薄いのでフルパス推奨）。
+# 新規の要対応メールが無ければ Slack には通知されない（dedup 済み）。
 
-0  9 * * 1-5 cd /path/to/inbox-watcher && /usr/bin/python3 inbox_watch.py >> logs/run.log 2>&1
-30 12 * * 1-5 cd /path/to/inbox-watcher && /usr/bin/python3 inbox_watch.py >> logs/run.log 2>&1
-30 15 * * 1-5 cd /path/to/inbox-watcher && /usr/bin/python3 inbox_watch.py >> logs/run.log 2>&1
-0  18 * * 1-5 cd /path/to/inbox-watcher && /usr/bin/python3 inbox_watch.py >> logs/run.log 2>&1
+0 9-19/2 * * 1-5 cd /path/to/inbox-watcher && /usr/bin/python3 inbox_watch.py >> logs/run.log 2>&1
 
 # macOS で確実に動かすなら cron より launchd 推奨（スリープ復帰後の取りこぼしが少ない）。
+# Windows の場合は cron ではなく「タスク スケジューラ」を使う。register-task.ps1 を参照。
