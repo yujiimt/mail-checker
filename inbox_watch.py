@@ -70,6 +70,7 @@ def run_claude(prompt):
         input=prompt,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         cwd=str(BASE),
         shell=(os.name == "nt"),
     )
